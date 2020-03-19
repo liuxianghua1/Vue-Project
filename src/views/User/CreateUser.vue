@@ -6,7 +6,7 @@
           this.$router.go(-1);
         }
       "
-      content="新建用户"
+      :content="this.$route.params.id ? '编辑用户' : '新建用户'"
     >
     </el-page-header>
     <el-form
@@ -15,7 +15,6 @@
       ref="ruleForm"
       label-width="100px"
       class="demo-ruleForm"
-      style="margin-top: 30px"
     >
       <el-form-item label="用户名" prop="username">
         <el-input v-model="ruleForm.username"></el-input>
@@ -37,8 +36,8 @@
       </el-form-item>
 
       <el-form-item label="权限" prop="role">
-        <el-radio v-model="ruleForm.role" label="0">超级管理员</el-radio>
-        <el-radio v-model="ruleForm.role" label="1">发帖员</el-radio>
+        <el-radio v-model="ruleForm.role" :label="0">超级管理员</el-radio>
+        <el-radio v-model="ruleForm.role" :label="1">发帖员</el-radio>
       </el-form-item>
 
       <el-form-item>
@@ -46,7 +45,7 @@
           type="primary"
           v-loading.fullscreen.lock="fullscreenLoading"
           @click="submitForm('ruleForm')"
-          >立即创建</el-button
+          >{{ this.$route.params.id ? "立即保存" : "立即创建" }}</el-button
         >
         <el-button @click="resetForm('ruleForm')">重置</el-button>
       </el-form-item>
@@ -80,7 +79,7 @@ export default {
       fullscreenLoading: false,
       ruleForm: {
         username: "",
-        role: "1",
+        role: 1,
         pass: "",
         checkPass: ""
       },
@@ -106,21 +105,38 @@ export default {
           message: "账户创建成功",
           type: "success"
         });
-        this.$router.push('/userlist');
+        this.$router.push("/userlist");
       } else if (res.data.err_code === 2) {
         this.$message.error("用户已存在");
       } else {
         this.$message.error("出现错误");
       }
-      // this.fullscreenLoading = true;
-      //   setTimeout(() => {
-      //     this.fullscreenLoading = false;
-      //   }, 2000);
+    },
+    async editUser() {
+      this.fullscreenLoading = true;
+      const res = await this.$axios.post(
+        `/edit/user/${this.$route.params.id}`,
+        this.ruleForm
+      );
+      this.fullscreenLoading = false;
+      if (res.data.err_code === 0) {
+        this.$message({
+          message: "账户创建成功",
+          type: "success"
+        });
+        this.$router.push("/userlist");
+      } else {
+        this.$message.error("出现错误");
+      }
     },
     submitForm(formName) {
       this.$refs[formName].validate(valid => {
         if (valid) {
-          this.createUser();
+          if (this.$route.params.id) {
+            this.editUser();
+          } else {
+            this.createUser();
+          }
         } else {
           console.log("error submit!!");
           return false;
@@ -129,9 +145,25 @@ export default {
     },
     resetForm(formName) {
       this.$refs[formName].resetFields();
+    },
+    async fetch() {
+      const res = await this.$axios.post("/detailed/user", {
+        id: this.$route.params.id
+      });
+      this.ruleForm.username = res.data[0].username;
+      this.ruleForm.role = res.data[0].role;
+    }
+  },
+  created() {
+    if (this.$route.params.id) {
+      this.fetch();
     }
   }
 };
 </script>
 
-<style></style>
+<style>
+.el-page-header {
+  margin-bottom: 30px;
+}
+</style>

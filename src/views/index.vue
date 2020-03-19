@@ -34,7 +34,7 @@
         </el-header>
 
         <el-main>
-          <router-view />
+          <router-view :key="$route.path" />
         </el-main>
       </el-container>
     </el-container>
@@ -62,13 +62,8 @@ body {
 <script>
 export default {
   data() {
-    const item = {
-      date: "2016-05-02",
-      name: "王小虎",
-      address: "上海市普陀区金沙江路 1518 弄"
-    };
+ 
     return {
-      tableData: Array(20).fill(item)
     };
   },
   methods: {
